@@ -1,6 +1,22 @@
 import tdl
 
 
+SCREEN_WIDTH = 40
+SCREEN_HEIGHT = 22
+
+COLOR_RED = 0xff0000
+COLOR_WHITE = 0x000000
+COLOR_GRAY = 0x95a5a6
+
+class Floor:
+
+    def __init__(self):
+        pass
+
+    def render(self, console):
+        console.draw_frame(1, 1, SCREEN_WIDTH-2, SCREEN_HEIGHT-2, '#', COLOR_GRAY)
+
+
 class Object:
 
     def __init__(self, x, y, char='?', color=(255, 255, 255)):
@@ -25,17 +41,19 @@ class Game:
         self.console = console = tdl.init(w, h)
 
         self.objects = []
-        self.player = Object(0, 0, '@')
-        self.objects.append(self.player)
-        self.objects.append(Object(5, 2, 'D'))
+        self.player = Object(SCREEN_WIDTH//2, SCREEN_HEIGHT//2, '@')
+        self.floor = Floor()
+        self.objects.append(Object(5, 2, 'D', color=COLOR_RED))
+        self.objects.append(Object(15, 4, 'p', color=COLOR_RED))
+        self.objects.append(Object(10, 6, '*', color=COLOR_RED))
+
 
     def render(self):
         self.console.clear(bg=(25, 25, 25))
-        self.console.draw_str(1, self.height//2, "Hello r/roguelikedev !")
-        self.console.draw_frame(1,1,10,10,'x',(255,0,0))
+        self.floor.render(self.console)
         for obj in self.objects:
             obj.render(self.console)
-
+        self.player.render(self.console)
         tdl.flush()
 
     def run(self):
@@ -60,7 +78,7 @@ class Game:
             
 
 def main():
-    game = Game(40, 22)
+    game = Game(SCREEN_WIDTH, SCREEN_HEIGHT)
     game.run()
 
 
