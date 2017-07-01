@@ -7,14 +7,49 @@ SCREEN_HEIGHT = 22
 COLOR_RED = 0xff0000
 COLOR_WHITE = 0x000000
 COLOR_GRAY = 0x95a5a6
+COLOR_FLOOR = 0x34495e
+COLOR_BG = 0x2c3e50
 
 class Floor:
 
     def __init__(self):
-        pass
+        self.map = [[0 for y in range(SCREEN_HEIGHT)] for x in range(SCREEN_WIDTH)]
+        self.tdl_map = tdl.map.Map(SCREEN_WIDTH, SCREEN_HEIGHT)
+        for x,y in self.tdl_map:
+            self.tdl_map.transparent[x,y] = True
+            self.tdl_map.walkable[x,y] = True
+
+    def build_walls(self):
+        for (x,y) in tdl.map.bresenham(1, 1, SCREEN_WIDTH-2, 1):
+            self.map[x][y] = 1
+            self.tdl_map.transparent[x,y] = False
+            self.tdl_map.walkable[x,y] = False
+
+        for (x,y) in tdl.map.bresenham(SCREEN_WIDTH-2, 1, SCREEN_WIDTH-2, SCREEN_HEIGHT-2):
+            self.map[x][y] = 1
+            self.tdl_map.transparent[x,y] = False
+            self.tdl_map.walkable[x,y] = False
+
+        for (x,y) in tdl.map.bresenham(SCREEN_WIDTH-2, SCREEN_HEIGHT-2, 1, SCREEN_HEIGHT-2):
+            self.map[x][y] = 1
+            self.tdl_map.transparent[x,y] = False
+            self.tdl_map.walkable[x,y] = False
+
+        for (x,y) in tdl.map.bresenham(1, SCREEN_HEIGHT-2, 1, 1):
+            self.map[x][y] = 1
+            self.tdl_map.transparent[x,y] = False
+            self.tdl_map.walkable[x,y] = False
+
 
     def render(self, console):
-        console.draw_frame(1, 1, SCREEN_WIDTH-2, SCREEN_HEIGHT-2, '#', COLOR_GRAY)
+        # console.draw_frame(1, 1, SCREEN_WIDTH-2, SCREEN_HEIGHT-2, '#', COLOR_GRAY)
+        for y in range(SCREEN_HEIGHT):
+            for x in range(SCREEN_WIDTH):
+                print("{} {}".format(x, y))
+                if self.map[x][y] == 1:
+                    console.draw_str(x, y, '#', fg=COLOR_GRAY)
+                else:
+                    console.draw_str(x, y, '.', fg=COLOR_FLOOR)
 
 
 class Object:
@@ -25,9 +60,13 @@ class Object:
         self.char = char
         self.color = color
 
-    def move(self, x, y):
-        self.x += x
-        self.y += y
+    def move(self, x, y, floor):
+        new_position_x = self.x + x
+        new_position_y = self.y + y
+        
+        if floor.tdl_map.walkable[new_position_x, new_position_y] == True:
+            self.x += x
+            self.y += y
 
     def render(self, console):
         console.draw_str(self.x, self.y, self.char, fg=self.color)
@@ -38,18 +77,19 @@ class Game:
     def __init__(self, w, h):
         self.width = w
         self.height = h
-        self.console = console = tdl.init(w, h)
+        self.console = console = tdl.init(w, h, "Game")
 
         self.objects = []
         self.player = Object(SCREEN_WIDTH//2, SCREEN_HEIGHT//2, '@')
         self.floor = Floor()
+        self.floor.build_walls()
         self.objects.append(Object(5, 2, 'D', color=COLOR_RED))
         self.objects.append(Object(15, 4, 'p', color=COLOR_RED))
         self.objects.append(Object(10, 6, '*', color=COLOR_RED))
 
 
     def render(self):
-        self.console.clear(bg=(25, 25, 25))
+        self.console.clear(bg=COLOR_BG)
         self.floor.render(self.console)
         for obj in self.objects:
             obj.render(self.console)
@@ -70,8 +110,8 @@ class Game:
                         y = 1
                     if key == "d":
                         x = 1
-
-                    self.player.move(x, y)
+                    
+                    self.player.move(x, y, self.floor)
 
             self.render()
             tdl.event.keyWait()
