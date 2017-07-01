@@ -60,7 +60,7 @@ class Game:
             
 
 def main():
-    game = Game(24, 16)
+    game = Game(40, 22)
     game.run()
 
 
